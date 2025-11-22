@@ -75,3 +75,36 @@ mvn archetype:generate ^
 
 # 自动生成代码配置
 
+### 首先修改生成代码路径
+
+主要参数说明：
+
+    project_path：后端 Java 项目模块路径
+    ui_project_path：前端 VUE3 项目路径
+    bussi_package：业务包路径-这里与上述生成包路径是一致的
+
+配置示例：   
+```
+project_path=D:\\github_repo\\tongnian_order\\server\\jeecg-boot-module\\jeecg-module-tongnian
+ui_project_path=D:\\github_repo\\tongnian_order\\web
+bussi_package=org.jeecgframework.boot3.tongnian
+```
+
+默认情况下，代码生成器与平台共用同一个数据库。所以这里的数据库不需要修改
+
+### 配置代码模板
+默认情况下，代码生成器会使用jeecg-boot的默认代码模板。 默认代码模板路径为：
+```
+server\jeecg-module-system\jeecg-system-biz\src\main\resources\jeecg\code-template-online
+```
+
+如果需要自定义代码模板，需要修改jeecg_config.properties文件中的templatepath参数。
+
+配置示例：
+```
+templatepath=/jeecg/code-template
+```
+
+### 在低代码-online表单开发中进行建表
+
+这里涉及单表，主表，附表。需要先进行设计，确定好表之间的关系。
