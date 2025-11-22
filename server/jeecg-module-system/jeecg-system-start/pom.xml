@@ -31,7 +31,11 @@
             <artifactId>flyway-core</artifactId>
             <version>7.15.0</version>
         </dependency>-->
-
+        <dependency>
+            <groupId>org.jeecgframework.boot3</groupId>
+            <artifactId>jeecg-module-tongnian</artifactId>
+            <version>${jeecgboot.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-properties-migrator</artifactId>
