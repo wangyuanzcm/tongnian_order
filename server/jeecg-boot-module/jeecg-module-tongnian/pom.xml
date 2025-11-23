@@ -34,6 +34,10 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.jeecgframework.boot3</groupId>
+      <artifactId>jeecg-boot-base-core</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
       <scope>test</scope>

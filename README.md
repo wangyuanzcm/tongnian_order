@@ -70,6 +70,14 @@ mvn archetype:generate ^
     <version>${jeecgboot.version}</version>
 </dependency>
 ```
+注意需要补充模块依赖：
+
+```
+    <dependency>
+      <groupId>org.jeecgframework.boot3</groupId>
+      <artifactId>jeecg-boot-base-core</artifactId>
+    </dependency>
+```
 
 最后运行：mvn clean install
 
@@ -87,7 +95,7 @@ mvn archetype:generate ^
 ```
 project_path=D:\\github_repo\\tongnian_order\\server\\jeecg-boot-module\\jeecg-module-tongnian
 ui_project_path=D:\\github_repo\\tongnian_order\\web
-bussi_package=org.jeecgframework.boot3.tongnian
+bussi_package=org.jeecg
 ```
 
 默认情况下，代码生成器与平台共用同一个数据库。所以这里的数据库不需要修改
@@ -105,6 +113,14 @@ server\jeecg-module-system\jeecg-system-biz\src\main\resources\jeecg\code-templa
 templatepath=/jeecg/code-template
 ```
 
+注意对应的代码位置在：
+```
+server\jeecg-module-system\jeecg-system-start\config
+```
+
+
 ### 在低代码-online表单开发中进行建表
 
 这里涉及单表，主表，附表。需要先进行设计，确定好表之间的关系。
+
+注意生成代码后，要手动执行sql脚本。
