@@ -118,8 +118,7 @@ export const tnGoodsSpecColumns: BasicColumn[] = [
    {
     title: '商品图片',
     align:"center",
-    dataIndex: 'imageUrl',
-    customRender:render.renderImage,
+    dataIndex: 'imageUrlString'
    },
    {
     title: '状态',
@@ -161,7 +160,7 @@ export const tnGoodsSpecFormSchema: FormSchema[] = [
   },
   {
     label: '商品图片',
-    field: 'imageUrl',
+    field: 'imageUrlString',
      component: 'JImageUpload',
      componentProps:{
         fileMax: 0

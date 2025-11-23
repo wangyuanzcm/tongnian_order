@@ -7,6 +7,16 @@ import { getWeekMonthQuarterYear } from '/@/utils';
 //列表数据
 export const columns: BasicColumn[] = [
    {
+    title: '订单编号',
+    align:"center",
+    dataIndex: 'orderNo'
+   },
+   {
+    title: '商品名称',
+    align:"center",
+    dataIndex: 'goodId_dictText'
+   },
+   {
     title: '应付金额',
     align:"center",
     dataIndex: 'payableAmount'
@@ -48,6 +58,24 @@ export const searchFormSchema: FormSchema[] = [
 ];
 //表单数据
 export const formSchema: FormSchema[] = [
+  {
+    label: '订单编号',
+    field: 'orderNo',
+    component: 'Input',
+  },
+  {
+    label: '商品名称',
+    field: 'goodId',
+    component: 'JDictSelectTag',
+    componentProps:{
+        dictCode:"tongnian_goods_category"
+     },
+    dynamicRules: ({model,schema}) => {
+          return [
+                 { required: true, message: '请输入商品名称!'},
+          ];
+     },
+  },
   {
     label: '应付金额',
     field: 'payableAmount',
@@ -184,12 +212,14 @@ export const tnOrderGoodsJVxeColumns: JVxeColumn[] = [
 
 // 高级查询数据
 export const superQuerySchema = {
-  payableAmount: {title: '应付金额',order: 0,view: 'number', type: 'number',},
-  paidAmount: {title: '实付金额',order: 1,view: 'number', type: 'number',},
-  collectAmount: {title: '代收金额',order: 2,view: 'number', type: 'number',},
-  recipientId: {title: '收件人',order: 3,view: 'sel_search', type: 'string',dictCode: '',},
-  orderStatus: {title: '订单状态',order: 4,view: 'number', type: 'number',},
-  isNewCustomer: {title: '是否新客户',order: 5,view: 'number', type: 'number',},
+  orderNo: {title: '订单编号',order: 0,view: 'text', type: 'string',},
+  goodId: {title: '商品名称',order: 1,view: 'list', type: 'string',dictCode: 'tongnian_goods_category',},
+  payableAmount: {title: '应付金额',order: 2,view: 'number', type: 'number',},
+  paidAmount: {title: '实付金额',order: 3,view: 'number', type: 'number',},
+  collectAmount: {title: '代收金额',order: 4,view: 'number', type: 'number',},
+  recipientId: {title: '收件人',order: 5,view: 'sel_search', type: 'string',dictCode: '',},
+  orderStatus: {title: '订单状态',order: 6,view: 'number', type: 'number',},
+  isNewCustomer: {title: '是否新客户',order: 7,view: 'number', type: 'number',},
   //子表高级查询
   tnOrderGoods: {
     title: '订单商品关联表',

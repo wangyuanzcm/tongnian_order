@@ -65,8 +65,33 @@ public class TnGoodsSpec implements Serializable {
     private java.math.BigDecimal price;
 	/**商品图片*/
 	@Excel(name = "商品图片", width = 15)
-    @Schema(description = "商品图片")
-    private java.lang.String imageUrl;
+    private transient java.lang.String imageUrlString;
+
+    private byte[] imageUrl;
+
+    public byte[] getImageUrl(){
+        if(imageUrlString==null){
+            return null;
+        }
+        try {
+            return imageUrlString.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public String getImageUrlString(){
+        if(imageUrl==null || imageUrl.length==0){
+            return "";
+        }
+        try {
+            return new String(imageUrl,"UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
 	/**状态*/
     @Excel(name = "状态", width = 15,replace = {"是_Y","否_N"} )
     @Schema(description = "状态")

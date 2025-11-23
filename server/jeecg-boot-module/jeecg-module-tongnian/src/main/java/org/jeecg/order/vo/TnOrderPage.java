@@ -52,6 +52,11 @@ public class TnOrderPage {
 	@Excel(name = "订单编号", width = 15)
 	@Schema(description = "订单编号")
     private java.lang.String orderNo;
+	/**商品名称*/
+	@Excel(name = "商品名称", width = 15, dicCode = "tongnian_goods_category")
+    @Dict(dicCode = "tongnian_goods_category")
+	@Schema(description = "商品名称")
+    private java.lang.String goodId;
 	/**应付金额*/
 	@Excel(name = "应付金额", width = 15)
 	@Schema(description = "应付金额")
