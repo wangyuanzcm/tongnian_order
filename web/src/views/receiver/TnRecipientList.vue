@@ -21,8 +21,6 @@
                 <Icon icon="mdi:chevron-down"></Icon>
               </a-button>
         </a-dropdown>
-        <!-- 高级查询 -->
-        <super-query :config="superQueryConfig" @search="handleSuperQuery" />
       </template>
        <!--操作栏-->
       <template #action="{ record }">
@@ -37,19 +35,18 @@
       </template>
     </BasicTable>
     <!-- 表单区域 -->
-    <TnRecipientModal @register="registerModal" @success="handleSuccess"></TnRecipientModal>
+    <TnRecipientModal @register="registerDrawer" @success="handleSuccess"></TnRecipientModal>
   </div>
 </template>
 
 <script lang="ts" name="receiver-tnRecipient" setup>
   import {ref, reactive, computed, unref} from 'vue';
   import {BasicTable, useTable, TableAction} from '/@/components/Table';
-  import {useModal} from '/@/components/Modal';
+  import { useDrawer } from '/@/components/Drawer';
   import { useListPage } from '/@/hooks/system/useListPage'
   import TnRecipientModal from './components/TnRecipientModal.vue'
   import {columns, searchFormSchema, superQuerySchema} from './TnRecipient.data';
   import {list, deleteOne, batchDelete, getImportUrl,getExportUrl} from './TnRecipient.api';
-  import { downloadFile } from '/@/utils/common/renderUtils';
   import { useUserStore } from '/@/store/modules/user';
   import { useMessage } from '/@/hooks/web/useMessage';
   import { getAreaTextByCode } from '/@/components/Form/src/utils/Area';
@@ -61,8 +58,8 @@
   const checkedKeys = ref<Array<string | number>>([]);
   const userStore = useUserStore();
   const { createMessage } = useMessage();
-  //注册model
-  const [registerModal, {openModal}] = useModal();
+  //注册抽屉
+  const [registerDrawer, { openDrawer }] = useDrawer();
   //注册table数据
   const { prefixCls,tableContext,onExportXls,onImportXls } = useListPage({
       tableProps:{
@@ -124,7 +121,7 @@
     * 新增事件
     */
   function handleAdd() {
-     openModal(true, {
+     openDrawer(true, {
        isUpdate: false,
        showFooter: true,
      });
@@ -133,7 +130,7 @@
     * 编辑事件
     */
   function handleEdit(record: Recordable) {
-     openModal(true, {
+     openDrawer(true, {
        record,
        isUpdate: true,
        showFooter: true,
@@ -143,7 +140,7 @@
     * 详情
    */
   function handleDetail(record: Recordable) {
-     openModal(true, {
+     openDrawer(true, {
        record,
        isUpdate: true,
        showFooter: false,
