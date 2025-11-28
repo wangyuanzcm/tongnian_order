@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.jeecgframework.poi.excel.annotation.Excel;
 import java.util.Date;
+import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.UnsupportedEncodingException;
@@ -96,4 +97,10 @@ public class TnGoodsSpec implements Serializable {
     @Excel(name = "状态", width = 15,replace = {"是_Y","否_N"} )
     @Schema(description = "状态")
     private java.lang.String status;
+    
+    /**
+     * 图片列表（非数据库字段）
+     */
+    @Schema(description = "图片列表")
+    private List<TnImage> imageList;
 }

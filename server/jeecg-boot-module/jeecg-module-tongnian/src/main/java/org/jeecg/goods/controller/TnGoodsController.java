@@ -174,10 +174,31 @@ public class TnGoodsController extends JeecgController<TnGoods, ITnGoodsService>
                                                     @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo,
                                                     @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
                                                     HttpServletRequest req) {
-        QueryWrapper<TnGoodsSpec> queryWrapper = QueryGenerator.initQueryWrapper(tnGoodsSpec, req.getParameterMap());
-        Page<TnGoodsSpec> page = new Page<TnGoodsSpec>(pageNo, pageSize);
-        IPage<TnGoodsSpec> pageList = tnGoodsSpecService.page(page, queryWrapper);
-        return Result.OK(pageList);
+        // 获取商品ID
+        String goodsId = tnGoodsSpec.getGoodsId();
+        if (goodsId != null && !"".equals(goodsId)) {
+            // 使用selectByMainId方法获取包含图片列表的商品规格
+            List<TnGoodsSpec> tnGoodsSpecList = tnGoodsSpecService.selectByMainId(goodsId);
+            
+            // 构建分页结果
+            Page<TnGoodsSpec> page = new Page<TnGoodsSpec>(pageNo, pageSize);
+            int total = tnGoodsSpecList.size();
+            int start = (int) ((pageNo - 1) * pageSize);
+            int end = Math.min(start + pageSize, total);
+            
+            if (start < total) {
+                page.setRecords(tnGoodsSpecList.subList(start, end));
+            }
+            page.setTotal(total);
+            
+            return Result.OK(page);
+        } else {
+            // 如果没有提供商品ID，使用普通分页查询
+            QueryWrapper<TnGoodsSpec> queryWrapper = QueryGenerator.initQueryWrapper(tnGoodsSpec, req.getParameterMap());
+            Page<TnGoodsSpec> page = new Page<TnGoodsSpec>(pageNo, pageSize);
+            IPage<TnGoodsSpec> pageList = tnGoodsSpecService.page(page, queryWrapper);
+            return Result.OK(pageList);
+        }
     }
 
 	/**
@@ -193,7 +214,7 @@ public class TnGoodsController extends JeecgController<TnGoods, ITnGoodsService>
 		return Result.OK("添加成功！");
 	}
 
-    /**
+	/**
 	 * 编辑
 	 * @param tnGoodsSpec
 	 * @return

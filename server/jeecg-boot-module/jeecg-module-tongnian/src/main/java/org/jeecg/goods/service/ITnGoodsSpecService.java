@@ -19,4 +19,22 @@ public interface ITnGoodsSpecService extends IService<TnGoodsSpec> {
    * @return List<TnGoodsSpec>
    */
 	public List<TnGoodsSpec> selectByMainId(String mainId);
+  
+  /**
+   * 保存商品规格及图片信息
+   *
+   * @param tnGoodsSpec 商品规格对象
+   * @return boolean
+   */
+  @Override
+  boolean save(TnGoodsSpec tnGoodsSpec);
+  
+  /**
+   * 更新商品规格及图片信息
+   *
+   * @param tnGoodsSpec 商品规格对象
+   * @return boolean
+   */
+  @Override
+  boolean updateById(TnGoodsSpec tnGoodsSpec);
 }

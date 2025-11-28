@@ -118,7 +118,23 @@ export const tnGoodsSpecColumns: BasicColumn[] = [
    {
     title: '商品图片',
     align:"center",
-    dataIndex: 'imageUrlString'
+    dataIndex: 'imageList',
+    customRender:({record}) => {
+      // 处理新的数据结构，从imageList字段获取图片信息
+      try {
+        // 检查record.imageList是否存在且为数组
+        if (record.imageList && Array.isArray(record.imageList) && record.imageList.length > 0) {
+          // 提取所有图片URL并以逗号分隔
+          const imageUrls = record.imageList.map(item => item.url).join(',');
+          // 调用renderImage函数显示图片
+          return render.renderImage({ text: imageUrls });
+        }
+        return render.renderImage({ text: '' });
+      } catch (error) {
+        console.error('解析图片数据失败:', error);
+        return render.renderImage({ text: '' });
+      }
+    },
    },
    {
     title: '状态',
