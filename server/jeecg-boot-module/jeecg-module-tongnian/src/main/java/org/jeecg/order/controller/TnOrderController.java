@@ -24,11 +24,13 @@ import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.system.query.QueryRuleEnum;
 import org.jeecg.common.util.oConvertUtils;
-import org.jeecg.order.entity.TnOrderGoods;
 import org.jeecg.order.entity.TnOrder;
-import org.jeecg.order.vo.TnOrderPage;
+import org.jeecg.order.entity.TnOrderGoods;
 import org.jeecg.order.service.ITnOrderService;
 import org.jeecg.order.service.ITnOrderGoodsService;
+import org.jeecg.receiver.entity.TnRecipient;
+import org.jeecg.receiver.service.ITnRecipientService;
+import org.jeecg.order.vo.TnOrderPage;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -56,9 +58,11 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 @Slf4j
 public class TnOrderController {
 	@Autowired
-	private ITnOrderService tnOrderService;
-	@Autowired
-	private ITnOrderGoodsService tnOrderGoodsService;
+private ITnOrderService tnOrderService;
+@Autowired
+private ITnOrderGoodsService tnOrderGoodsService;
+@Autowired
+private ITnRecipientService recipientService;
 	
 	/**
 	 * 分页列表查询
@@ -69,17 +73,37 @@ public class TnOrderController {
 	 * @param req
 	 * @return
 	 */
-	//@AutoLog(value = "订单主表-分页列表查询")
+	@AutoLog(value = "订单主表-分页列表查询")
 	@Operation(summary="订单主表-分页列表查询")
 	@GetMapping(value = "/list")
-	public Result<IPage<TnOrder>> queryPageList(TnOrder tnOrder,
+	public Result<IPage<TnOrderPage>> queryPageList(TnOrder tnOrder,
 								   @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
 								   @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
 								   HttpServletRequest req) {
         QueryWrapper<TnOrder> queryWrapper = QueryGenerator.initQueryWrapper(tnOrder, req.getParameterMap());
 		Page<TnOrder> page = new Page<TnOrder>(pageNo, pageSize);
 		IPage<TnOrder> pageList = tnOrderService.page(page, queryWrapper);
-		return Result.OK(pageList);
+		
+		// 转换为包含商品信息和收件人信息的Page对象
+		IPage<TnOrderPage> resultPage = pageList.convert(order -> {
+			TnOrderPage orderPage = new TnOrderPage();
+			// 复制基本信息
+			BeanUtils.copyProperties(order, orderPage);
+			
+			// 查询关联的商品信息
+			List<TnOrderGoods> goodsList = tnOrderGoodsService.selectByMainId(order.getId());
+			orderPage.setTnOrderGoodsList(goodsList);
+			
+			// 查询关联的收件人信息
+			if (order.getRecipientId() != null) {
+				TnRecipient recipient = recipientService.getById(order.getRecipientId());
+				orderPage.setRecipient(recipient);
+			}
+			
+			return orderPage;
+		});
+		
+		return Result.OK(resultPage);
 	}
 	
 	/**

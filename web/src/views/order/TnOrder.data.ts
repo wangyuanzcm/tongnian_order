@@ -14,7 +14,11 @@ export const columns: BasicColumn[] = [
    {
     title: '商品名称',
     align:"center",
-    dataIndex: 'goodId_dictText'
+    dataIndex: 'goodId',
+    customRender: ({text}) => {
+      // 使用render.renderDict函数通过字典接口查询商品名称
+      return render.renderDict(text, 'tongnian_goods_category');
+    }
    },
    {
     title: '应付金额',
@@ -34,14 +38,24 @@ export const columns: BasicColumn[] = [
    {
     title: '收件人',
     align:"center",
-    dataIndex: 'recipientId_dictText'
+    dataIndex: 'recipientId',
+    customRender: ({text}) => {
+      // 使用render.renderDict函数通过字典接口查询收件人名称
+      // 这里假设收件人的字典编码为'tn_recipient'
+      return render.renderDict(text, 'tn_recipient');
+    }
    },
    {
     title: '订单状态',
     align:"center",
     dataIndex: 'orderStatus',
     customRender:({text}) => {
-       return  render.renderSwitch(text, [{text:'是',value:'Y'},{text:'否',value:'N'}])
+       // 根据后端返回的数字值显示对应的状态文本
+       const statusMap = {
+         50: '已完成',
+         // 可以根据实际需求添加更多状态映射
+       };
+       return statusMap[text] || `状态${text}`;
      },
    },
    {
@@ -49,7 +63,13 @@ export const columns: BasicColumn[] = [
     align:"center",
     dataIndex: 'isNewCustomer',
     customRender:({text}) => {
-       return  render.renderSwitch(text, [{text:'是',value:'Y'},{text:'否',value:'N'}])
+       // 根据后端返回的数字值显示对应的客户类型
+       const customerMap = {
+         1: '是',
+         2: '否',
+         null: '-'
+       };
+       return customerMap[text] || text;
      },
    },
 ];
@@ -157,17 +177,38 @@ export const tnOrderGoodsColumns: BasicColumn[] = [
    {
     title: '商品名称',
     align:"center",
-    dataIndex: 'goodsName_dictText'
+    dataIndex: 'goodsName',
+    width: 200
+   },
+   {
+    title: '商品规格',
+    align:"center",
+    dataIndex: 'goodsSpec',
+    width: 100
    },
    {
     title: '商品单价',
     align:"center",
-    dataIndex: 'unitPrice'
+    dataIndex: 'unitPrice',
+    width: 100,
+    customRender: ({ text }) => {
+      return `¥${Number(text).toFixed(2)}`;
+    }
    },
    {
     title: '商品数量',
     align:"center",
-    dataIndex: 'quantity'
+    dataIndex: 'quantity',
+    width: 100
+   },
+   {
+    title: '商品小计',
+    align:"center",
+    dataIndex: 'subtotal',
+    width: 100,
+    customRender: ({ record }) => {
+      return `¥${(record.unitPrice * record.quantity).toFixed(2)}`;
+    }
    },
 ];
 //子表表格配置

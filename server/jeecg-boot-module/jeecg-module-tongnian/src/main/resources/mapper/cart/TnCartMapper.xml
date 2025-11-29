@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.jeecg.cart.mapper.TnCartMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="org.jeecg.cart.entity.TnCart">
+        <id column="id" property="id"/>
+        <result column="create_by" property="createBy"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="goods_id" property="goodsId"/>
+        <result column="goods_name" property="goodsName"/>
+        <result column="spec_type" property="specType"/>
+        <result column="price" property="price"/>
+        <result column="quantity" property="quantity"/>
+        <result column="image_url" property="imageUrl"/>
+        <result column="user_id" property="userId"/>
+    </resultMap>
+
+    <!-- 自定义查询映射结果 -->
+    <resultMap id="ResultMapWithBLOBs" type="org.jeecg.cart.vo.TnCartVO" extends="BaseResultMap">
+        <result column="price" property="price"/>
+        <result column="quantity" property="quantity"/>
+        <result column="price" property="totalPrice" javaType="java.math.BigDecimal" jdbcType="DECIMAL">
+            <![CDATA[ CASE WHEN price IS NOT NULL AND quantity IS NOT NULL THEN price * quantity ELSE 0 END ]]>
+        </result>
+    </resultMap>
+
+    <!-- 查询购物车列表 -->
+    <select id="queryCartList" resultMap="ResultMapWithBLOBs">
+        SELECT
+            *
+        FROM
+            tn_cart
+        WHERE
+            1=1
+        <if test="params.userId != null and params.userId != ''">
+            AND user_id = #{params.userId}
+        </if>
+        ORDER BY
+            create_time DESC
+    </select>
+
+    <!-- 查询购物车数量 -->
+    <select id="queryCartCount" resultType="java.lang.Integer">
+        SELECT
+            COUNT(*)
+        FROM
+            tn_cart
+        WHERE
+            user_id = #{userId}
+    </select>
+
+    <!-- 根据商品ID和规格类型查询购物车项 -->
+    <select id="queryByGoodsIdAndSpecType" resultMap="BaseResultMap">
+        SELECT
+            *
+        FROM
+            tn_cart
+        WHERE
+            goods_id = #{goodsId}
+            AND spec_type = #{specType}
+            AND user_id = #{userId}
+    </select>
+
+    <!-- 清空购物车 -->
+    <delete id="clearCart">
+        DELETE FROM
+            tn_cart
+        WHERE
+            user_id = #{userId}
+    </delete>
+</mapper>

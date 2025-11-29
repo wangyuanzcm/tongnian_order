@@ -74,4 +74,4 @@ export const saveOrUpdate = (params, isUpdate) => {
  * @param params
  */
 export const tnOrderGoodsList = (params) =>
-  defHttp.get({url: Api.tnOrderGoodsList, params},{isTransformResponse:false});
+  defHttp.get({url: Api.tnOrderGoodsList, params});

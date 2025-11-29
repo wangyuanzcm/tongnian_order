@@ -79,12 +79,71 @@
        </template>
      </BasicTable>
 
+     <!-- 购买数量选择抽屉 -->
+     <a-drawer
+       title="购买商品"
+       :width="400"
+       :visible="buyDrawerVisible"
+       :footer="null"
+       @close="handleCloseDrawer"
+     >
+       <div class="buy-drawer-content">
+         <div class="goods-info">
+           <div v-if="selectedGoods.imageList && Array.isArray(selectedGoods.imageList) && selectedGoods.imageList.length > 0" class="goods-image">
+             <a-image
+               :width="100"
+               :src="selectedGoods.imageList[0].url"
+               :preview="{ visible: false }"
+             />
+           </div>
+           <div v-else-if="selectedGoods.imageUrlString" class="goods-image">
+             <a-image
+               :width="100"
+               :src="selectedGoods.imageUrlString.split(',')[0]"
+               :preview="{ visible: false }"
+             />
+           </div>
+           <div class="goods-details">
+             <div class="goods-spec">{{ selectedGoods.specType }}</div>
+             <div class="goods-price">¥{{ selectedGoods.price }}</div>
+           </div>
+         </div>
+         
+         <div class="quantity-section">
+           <span class="quantity-label">购买数量：</span>
+           <div class="quantity-control">
+             <a-button 
+               size="small" 
+               :disabled="buyQuantity <= 1"
+               @click="buyQuantity--"
+             >
+               -
+             </a-button>
+             <input 
+               type="number" 
+               v-model.number="buyQuantity" 
+               min="1" 
+               class="quantity-input"
+             />
+             <a-button size="small" @click="buyQuantity++">
+               +
+             </a-button>
+           </div>
+         </div>
+         
+         <div class="drawer-actions">
+           <a-button @click="handleCloseDrawer">取消</a-button>
+           <a-button type="primary" @click="handleAddToCart">加入购物车</a-button>
+         </div>
+       </div>
+     </a-drawer>
+
       <TnGoodsSpecModal @register="registerModal" @success="handleSuccess"/>
    </div>
 </template>
 
 <script lang="ts" setup>
-  import {ref, computed, unref,inject,watch} from 'vue';
+  import {ref, computed, unref,inject,watch, onMounted, onUnmounted} from 'vue';
   import {BasicTable, useTable, TableAction} from '/@/components/Table';
   import { useListPage } from '/@/hooks/system/useListPage'
   import {useModal} from '/@/components/Modal';
@@ -98,6 +157,7 @@
   import { Image as AImage } from 'ant-design-vue';
   import { Modal as AModal } from 'ant-design-vue';
   import { LoadingOutlined } from '@ant-design/icons-vue';
+  import { addToCart } from '../cart/Cart.api';
 
     //接收主表id
     const mainId = inject('mainId') || '';
@@ -116,6 +176,60 @@
       previewImageUrl.value = url;
       previewVisible.value = true;
     }
+    
+    // 购买相关状态
+    const buyDrawerVisible = ref(false);
+    const selectedGoods = ref({});
+    const buyQuantity = ref(1);
+    
+    // 监听购买事件
+    function handleBuyGoods(event) {
+      const goods = event.detail;
+      selectedGoods.value = goods;
+      buyQuantity.value = 1;
+      buyDrawerVisible.value = true;
+    }
+    
+    // 关闭购买抽屉
+    function handleCloseDrawer() {
+      buyDrawerVisible.value = false;
+    }
+    
+    // 添加到购物车
+    async function handleAddToCart() {
+      try {
+        const goods = selectedGoods.value;
+        const data = {
+          goodsId: goods.id,
+          specId: goods.id,
+          quantity: buyQuantity.value,
+          goodsName: goods.specType, // 使用规格类型作为商品名称
+          price: goods.price,
+          specType: goods.specType
+        };
+        
+        const result = await addToCart(data);
+        if (result) {
+          $message.success('已成功加入购物车');
+          handleCloseDrawer();
+        } else {
+          $message.error('加入购物车失败');
+        }
+      } catch (error) {
+        console.error('加入购物车失败:', error);
+        $message.error('加入购物车失败，请稍后重试');
+      }
+    }
+    
+    // 组件挂载时添加事件监听
+    onMounted(() => {
+      window.addEventListener('buyGoods', handleBuyGoods);
+    });
+    
+    // 组件卸载时移除事件监听
+    onUnmounted(() => {
+      window.removeEventListener('buyGoods', handleBuyGoods);
+    });
     // 列表页面公共参数、方法
     const {prefixCls, tableContext, onImportXls, onExportXls} = useListPage({
         tableProps: {
@@ -252,5 +366,67 @@
     height: 80px;
     background-color: #f5f5f5;
     color: #999;
+  }
+  
+  /* 购买抽屉样式 */
+  .buy-drawer-content {
+    padding: 20px;
+  }
+  
+  .goods-info {
+    display: flex;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .goods-image {
+    margin-right: 20px;
+  }
+  
+  .goods-details {
+    flex: 1;
+  }
+  
+  .goods-spec {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+  
+  .goods-price {
+    font-size: 20px;
+    font-weight: bold;
+    color: #ff4d4f;
+  }
+  
+  .quantity-section {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+  }
+  
+  .quantity-label {
+    margin-right: 20px;
+  }
+  
+  .quantity-control {
+    display: flex;
+    align-items: center;
+  }
+  
+  .quantity-input {
+    width: 60px;
+    text-align: center;
+    margin: 0 8px;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    padding: 4px;
+  }
+  
+  .drawer-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 30px;
   }
 </style>

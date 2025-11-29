@@ -6,7 +6,7 @@
            <template #expandedRowRender="{record}">
              <a-tabs tabPosition="top">
                <a-tab-pane tab="订单商品关联表" key="tnOrderGoods" forceRender>
-                  <tnOrderGoodsSubTable v-if="expandedRowKeys.includes(record.id)" :id="record.id" />
+                  <tnOrderGoodsSubTable v-if="expandedRowKeys.includes(record.id)" :id="record.id" :tnOrderGoodsList="record.tnOrderGoodsList || []" />
                </a-tab-pane>
              </a-tabs>
            </template>

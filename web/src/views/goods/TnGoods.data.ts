@@ -112,7 +112,10 @@ export const tnGoodsSpecColumns: BasicColumn[] = [
   {
     title: '商品价格',
     align: "center",
-    dataIndex: 'price'
+    dataIndex: 'price',
+    customRender: ({ text }) => {
+      return `¥${text}`;
+    }
   },
   {
     title: '商品图片',
@@ -128,6 +131,25 @@ export const tnGoodsSpecColumns: BasicColumn[] = [
     dataIndex: 'status',
     customRender: ({ text }) => {
       return render.renderSwitch(text, [{ text: '是', value: 'Y' }, { text: '否', value: 'N' }])
+    }
+  },
+  {
+    title: '操作',
+    align: "center",
+    width: 100,
+    dataIndex: 'operation',
+    fixed: 'right',
+    customRender: ({ record }) => {
+      return render.renderButton({
+        text: '购买',
+        type: 'primary',
+        disabled: record.status !== 'Y',
+        onClick: (e) => {
+          e?.stopPropagation?.();
+          // 触发购买事件，通过window事件总线传递
+          window.dispatchEvent(new CustomEvent('buyGoods', { detail: record }));
+        }
+      });
     }
   }
 ];

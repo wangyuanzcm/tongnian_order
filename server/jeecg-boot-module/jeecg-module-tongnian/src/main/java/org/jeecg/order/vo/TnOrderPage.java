@@ -3,6 +3,7 @@ package org.jeecg.order.vo;
 import java.util.List;
 import org.jeecg.order.entity.TnOrder;
 import org.jeecg.order.entity.TnOrderGoods;
+import org.jeecg.receiver.entity.TnRecipient;
 import lombok.Data;
 import org.jeecgframework.poi.excel.annotation.Excel;
 import org.jeecgframework.poi.excel.annotation.ExcelEntity;
@@ -89,5 +90,9 @@ public class TnOrderPage {
 	@ExcelCollection(name="订单商品关联表")
 	@Schema(description = "订单商品关联表")
 	private List<TnOrderGoods> tnOrderGoodsList;
+	
+	/**收件人详细信息*/
+	@Schema(description = "收件人详细信息")
+	private TnRecipient recipient;
 	
 }
