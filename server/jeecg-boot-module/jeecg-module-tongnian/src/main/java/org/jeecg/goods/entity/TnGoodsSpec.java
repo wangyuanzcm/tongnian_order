@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.baomidou.mybatisplus.annotation.TableField;
 import org.jeecg.common.aspect.annotation.Dict;
 import org.jeecg.common.constant.ProvinceCityArea;
 import org.jeecg.common.util.SpringContextUtils;
@@ -17,6 +18,12 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.UnsupportedEncodingException;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 
 /**
  * @Description: 商品规格/价格明细
@@ -68,7 +75,7 @@ public class TnGoodsSpec implements Serializable {
 	@Excel(name = "商品图片", width = 15)
     private transient java.lang.String imageUrlString;
 
-    private byte[] imageUrl;
+    private transient byte[] imageUrl;
 
     public byte[] getImageUrl(){
         if(imageUrlString==null){
@@ -102,5 +109,42 @@ public class TnGoodsSpec implements Serializable {
      * 图片列表（非数据库字段）
      */
     @Schema(description = "图片列表")
+    @JsonDeserialize(using = ImageListDeserializer.class)
+    @com.baomidou.mybatisplus.annotation.TableField(exist = false)
     private List<TnImage> imageList;
+    
+    public List<TnImage> getImageList() {
+        return imageList;
+    }
+
+    public void setImageList(List<TnImage> imageList) {
+        this.imageList = imageList;
+    }
+    
+    // 自定义反序列化器，处理字符串数组和对象数组
+    public static class ImageListDeserializer extends JsonDeserializer<List<TnImage>> {
+        @Override
+        public List<TnImage> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            JsonNode node = p.getCodec().readTree(p);
+            List<TnImage> result = new java.util.ArrayList<>();
+            
+            if (node.isArray()) {
+                for (JsonNode item : node) {
+                    if (item.isTextual()) {
+                        // 如果是字符串，创建TnImage对象
+                        String imageId = item.asText();
+                        TnImage image = new TnImage();
+                        image.setId(imageId);
+                        result.add(image);
+                    } else if (item.isObject()) {
+                        // 如果是对象，使用默认反序列化
+                        TnImage image = p.getCodec().treeToValue(item, TnImage.class);
+                        result.add(image);
+                    }
+                }
+            }
+            
+            return result;
+        }
+    }
 }

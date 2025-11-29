@@ -156,6 +156,49 @@ const render = {
   renderTag(text, color) {
     return isEmpty(text) ? h('span', text) : h(Tag, { color }, () => text);
   },
+  
+  /**
+   * 渲染图片列表
+   * @param record 包含图片数据的记录对象
+   */
+  renderImageList: ({ record }) => {
+    if (!record || !record.imageList) {
+      return h('span', '');
+    }
+    
+    let imageList = record.imageList;
+    if (!Array.isArray(imageList)) {
+      // 如果不是数组，可能是字符串，尝试解析
+      try {
+        imageList = JSON.parse(imageList);
+      } catch (e) {
+        // 如果解析失败，可能是逗号分隔的URL字符串
+        if (typeof imageList === 'string') {
+          imageList = imageList.split(',').map(url => ({ url }));
+        } else {
+          return h('span', '');
+        }
+      }
+    }
+    
+    return h(
+      'div',
+      { class: 'image-preview-list' },
+      imageList.map((item, index) => {
+        const url = item.url || item;
+        if (!url) return null;
+        
+        return h(Image, {
+          key: index,
+          src: getFileAccessHttpUrl(url),
+          width: 60,
+          height: 60,
+          style: { marginRight: '5px', marginBottom: '5px', cursor: 'pointer' },
+          class: 'image-preview-item',
+        });
+      })
+    );
+  },
 };
 
 /**

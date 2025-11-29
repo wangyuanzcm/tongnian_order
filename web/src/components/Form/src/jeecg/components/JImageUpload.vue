@@ -135,11 +135,36 @@
         () => props.value,
         (val, prevCount) => {
          //update-begin---author:liusq ---date:20230601  for：【issues/556】JImageUpload组件value赋初始值没显示图片------------
-            if (val && val instanceof Array) {
-            val = val.join(',');
-          }
-          if (initTag.value == true) {
-            initFileList(val);
+          // 只有当初始值发生显著变化时，才重新初始化文件列表
+          const isSignificantChange = !prevCount && val || 
+                                      prevCount && !val || 
+                                      (typeof prevCount === 'string' && typeof val === 'string' && 
+                                       prevCount.length !== val.length);
+          
+          // 只有在初始化时或值发生显著变化时，才重新初始化文件列表
+          if ((initTag.value == true && !prevCount) || isSignificantChange) {
+            if (typeof val === 'string') {
+              try {
+                // 尝试解析JSON字符串为对象数组
+                const parsedVal = JSON.parse(val);
+                if (Array.isArray(parsedVal)) {
+                  // 如果是有效的对象数组，使用对象数组初始化
+                  initFileListFromObjects(parsedVal);
+                  return;
+                }
+              } catch (e) {
+                // 如果解析失败，使用旧的字符串格式处理
+                console.log('解析JSON失败，使用旧的字符串格式处理', e);
+              }
+              // 兼容旧的字符串格式
+              initFileList(val);
+            } else if (Array.isArray(val)) {
+              // 兼容对象数组格式
+              initFileListFromObjects(val);
+            } else {
+              // 清空文件列表
+              uploadFileList.value = [];
+            }
           }
         },
         { immediate: true }
@@ -147,7 +172,7 @@
       );
 
       /**
-       * 初始化文件列表
+       * 初始化文件列表（从字符串格式）
        */
       function initFileList(paths) {
         if (!paths || paths.length == 0) {
@@ -155,19 +180,70 @@
           return;
         }
         let files = [];
-        let arr = paths.split(',');
-        arr.forEach((value) => {
-          let url = getFileAccessHttpUrl(value);
+        // 处理包含ID和URL的数据格式，用|分隔
+        let hasIds = paths.includes('|');
+        let ids = [];
+        let urls = [];
+        
+        if (hasIds) {
+          let parts = paths.split('|');
+          ids = parts[0].split(',');
+          urls = parts[1].split(',');
+        } else {
+          urls = paths.split(',');
+        }
+        
+        urls.forEach((value, index) => {
+          // 处理可能包含多余反引号的URL
+          let cleanValue = value;
+          if (cleanValue && typeof cleanValue === 'string') {
+            // 去除可能存在的反引号
+            cleanValue = cleanValue.replace(/^`|`$/g, '').trim();
+          }
+          let url = getFileAccessHttpUrl(cleanValue);
           files.push({
-            uid: getRandom(10),
-            name: getFileName(value),
+            uid: hasIds && ids[index] ? ids[index] : getRandom(10),
+            name: getFileName(cleanValue),
             status: 'done',
             url: url,
             response: {
               status: 'history',
-              message: value,
+              message: cleanValue,
             },
           });
+        });
+        uploadFileList.value = files;
+      }
+      
+      /**
+       * 初始化文件列表（从对象数组格式）
+       */
+      function initFileListFromObjects(imageObjects) {
+        if (!imageObjects || !Array.isArray(imageObjects) || imageObjects.length === 0) {
+          uploadFileList.value = [];
+          return;
+        }
+        
+        let files = [];
+        imageObjects.forEach((item) => {
+          if (item.url) {
+            let cleanValue = item.url;
+            if (typeof cleanValue === 'string') {
+              // 去除可能存在的反引号
+              cleanValue = cleanValue.replace(/^`|`$/g, '').trim();
+            }
+            let url = getFileAccessHttpUrl(cleanValue);
+            files.push({
+              uid: item.uid || getRandom(10),
+              name: item.name || getFileName(cleanValue),
+              status: 'done',
+              url: url,
+              response: {
+                status: 'history',
+                message: cleanValue,
+              },
+            });
+          }
         });
         uploadFileList.value = files;
       }
@@ -186,9 +262,8 @@
        * 文件上传结果回调
        */
       function handleChange({ file, fileList, event }) {
-        initTag.value = false;
-        // update-begin--author:liaozhiyang---date:20231116---for：【issues/846】上传多个列表只显示一个
-        // uploadFileList.value = fileList;
+        // 保存当前文件列表的引用，避免在处理过程中被意外修改
+        uploadFileList.value = fileList;
         if (file.status === 'error') {
           createMessage.error(`${file.name} 上传失败.`);
         }
@@ -203,11 +278,48 @@
         }
         // update-end--author:liaozhiyang---date:20240704---for：【TV360X-1640】上传图片大小超出限制显示优化
         let fileUrls = [];
+        let fileIds = [];
         let noUploadingFileCount = 0;
         if (file.status != 'uploading') {
           fileList.forEach((file) => {
             if (file.status === 'done') {
-              fileUrls.push(file.response.message);
+              let url = '';
+              // 优先从response.result.url获取URL（新上传的文件）
+              if (file.response.result?.url) {
+                url = file.response.result.url;
+                if (typeof url === 'string') {
+                  // 去除可能存在的反引号
+                  url = url.replace(/^`|`$/g, '').trim();
+                  // 更新文件对象的url属性，确保预览功能正常工作
+                  file.url = getFileAccessHttpUrl(url);
+                }
+              } 
+              // 如果是历史文件（已存在的文件），直接使用file.url
+              else if (file.url) {
+                url = file.url;
+              }
+              // 如果是通过initFileList初始化的文件，从response.message获取
+              else if (file.response?.message) {
+                url = file.response.message;
+                if (typeof url === 'string') {
+                  url = url.replace(/^`|`$/g, '').trim();
+                  file.url = getFileAccessHttpUrl(url);
+                }
+              }
+              
+              // 保存图片完整信息
+              if (url) {
+                fileUrls.push(url);
+              }
+              
+              // 保存图片ID
+              if (file.response.result?.uid) {
+                file.uid = file.response.result.uid;
+                fileIds.push(file.response.result.uid);
+              } else if (file.uid) {
+                // 保留已存在的文件ID
+                fileIds.push(file.uid);
+              }
             }
             if (file.status != 'uploading') {
               noUploadingFileCount++;
@@ -217,16 +329,41 @@
             handleDelete(file);
           }
           if (noUploadingFileCount == fileList.length) {
-            state.value = fileUrls.join(',');
-            emit('update:value', fileUrls.join(','));
-            // update-begin---author:wangshuai ---date:20221121  for：[issues/248]原生表单内使用图片组件,关闭弹窗图片组件值不会被清空------------
-            nextTick(() => {
-              initTag.value = true;
-            });
-            // update-end---author:wangshuai ---date:20221121  for：[issues/248]原生表单内使用图片组件,关闭弹窗图片组件值不会被清空------------
+            // 构建图片对象数组
+            const imageObjects = fileList
+              .filter(file => file.status === 'done' && (file.url || file.response?.message))
+              .map(file => {
+                let url = '';
+                if (file.response.result?.url) {
+                  url = file.response.result.url;
+                  if (typeof url === 'string') {
+                    url = url.replace(/^`|`$/g, '').trim();
+                  }
+                } else if (file.url) {
+                  url = file.url;
+                } else if (file.response?.message) {
+                  url = file.response.message;
+                  if (typeof url === 'string') {
+                    url = url.replace(/^`|`$/g, '').trim();
+                  }
+                }
+                
+                return {
+                  uid: file.uid,
+                  name: file.name || '',
+                  url: url
+                };
+              });
+            console.log(imageObjects,'===')
+            // 将对象数组转换为JSON字符串传递给表单
+            const jsonString = JSON.stringify(imageObjects);
+            state.value = jsonString;
+            emit('update:value', state.value);
+            
+            // 不立即设置initTag为true，避免触发watch重新初始化文件列表
+            // 只有在需要清空组件值时才设置initTag为true
           }
         }
-        // update-end--author:liaozhiyang---date:20231116---for：【issues/846】上传多个列表只显示一个
       }
 
       /**

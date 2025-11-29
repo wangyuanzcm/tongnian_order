@@ -30,6 +30,11 @@ enum Api {
 export const uploadUrl = `${baseUploadUrl}/sys/common/upload`;
 
 /**
+ * 商品图片上传接口
+ */
+export const goodsImageUploadUrl = `${baseUploadUrl}/api/goods/image/upload`;
+
+/**
  * 职务列表
  * @param params
  */

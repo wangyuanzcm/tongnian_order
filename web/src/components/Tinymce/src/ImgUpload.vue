@@ -82,7 +82,8 @@
           fileList.forEach((file) => {
             if (file.status === 'done' && file.response.success) {
               const name = file?.name;
-              let realUrl = getFileAccessHttpUrl(file.response.message);
+              // 适配新的接口返回格式，图片数据在response.result中
+              let realUrl = getFileAccessHttpUrl(file.response.result.url);
               uploadFileList.value.push(file);
               emit('done', name, realUrl);
             }

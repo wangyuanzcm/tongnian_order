@@ -22,15 +22,30 @@ const baseApiUrl = globSetting.domainUrl;
 export const getFileAccessHttpUrl = (fileUrl, prefix = 'http') => {
   let result = fileUrl;
   try {
-    if (fileUrl && fileUrl.length > 0 && !fileUrl.startsWith(prefix)) {
-      //判断是否是数组格式
-      let isArray = fileUrl.indexOf('[') != -1;
-      if (!isArray) {
-        let prefix = `${baseApiUrl}/sys/common/static/`;
-        // 判断是否已包含前缀
-        if (!fileUrl.startsWith(prefix)) {
-          result = `${prefix}${fileUrl}`;
+    if (fileUrl && fileUrl.length > 0) {
+      // 清理URL，去除可能存在的反引号和首尾空格
+      let cleanUrl = fileUrl;
+      if (typeof cleanUrl === 'string') {
+        cleanUrl = cleanUrl.replace(/^`|`$/g, '').trim();
+      }
+      
+      // 检查清理后的URL是否已经以http/https开头
+      if (!cleanUrl.startsWith(prefix)) {
+        //判断是否是数组格式
+        let isArray = cleanUrl.indexOf('[') != -1;
+        if (!isArray) {
+          let staticPrefix = `${baseApiUrl}/sys/common/static/`;
+          // 判断是否已包含前缀
+          if (!cleanUrl.startsWith(staticPrefix)) {
+            result = `${staticPrefix}${cleanUrl}`;
+          } else {
+            result = cleanUrl;
+          }
+        } else {
+          result = cleanUrl;
         }
+      } else {
+        result = cleanUrl;
       }
     }
   } catch (err) {}

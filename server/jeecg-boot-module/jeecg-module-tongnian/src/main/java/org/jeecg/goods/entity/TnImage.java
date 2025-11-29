@@ -40,4 +40,18 @@ public class TnImage implements Serializable {
     /**状态*/
     @Schema(description = "状态")
     private java.lang.String status;
+    
+    /**
+     * 用于Jackson反序列化的字符串构造函数
+     * @param id 图片ID
+     */
+    public TnImage(String id) {
+        this.id = id;
+    }
+    
+    /**
+     * 默认构造函数（必须保留，否则会影响其他功能）
+     */
+    public TnImage() {
+    }
 }

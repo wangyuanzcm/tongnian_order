@@ -29,6 +29,7 @@
         baseColProps: {span: 24},
         baseRowStyle: { padding: "0 20px" }
     });
+
     //表单赋值
     const [registerModal, {setModalProps, closeModal}] = useModalInner(async (data) => {
         //重置表单
@@ -38,9 +39,25 @@
         isDetail.value = !!data?.showFooter;
         if (unref(isUpdate)) {
             //表单赋值
-            await setFieldsValue({
-                ...data.record,
-            });
+            const record = { ...data.record };
+            // 处理图片数据回显
+            if (record.imageList && Array.isArray(record.imageList)) {
+                // 直接将imageList转换为JImageUpload组件需要的对象数组格式
+                record.imageList = record.imageList.map((item) => ({
+                    uid: item.id || item.uid, // 使用图片ID作为uid
+                    name: item.name || `image_${item.id || item.uid}`,
+                    url: item.url,
+                }));
+            } else if (record.imageUrlString && typeof record.imageUrlString === 'string') {
+                // 如果是逗号分隔的URL字符串，转换为对象数组格式
+                const urls = record.imageUrlString.split(',');
+                record.imageList = urls.map((url, index) => ({
+                    uid: index + 1,
+                    name: `image_${index + 1}`,
+                    url: url,
+                }));
+            }
+            await setFieldsValue(record);
         }
         // 隐藏底部时禁用整个表单
        setProps({ disabled: !data?.showFooter })
@@ -53,6 +70,48 @@
             let values = await validate();
             // 预处理日期数据
             changeDateValue(values);
+            console.log(values,'===')
+            // 处理图片数据格式转换
+            if (values.imageList) {
+                // 确保imageList是字符串数组
+                if (Array.isArray(values.imageList)) {
+                    // 从图片对象数组中提取uid属性，形成字符串数组
+                    values.imageList = values.imageList.map((item) => {
+                        // 确保item是对象且有uid属性
+                        if (item && typeof item === 'object' && item.uid) {
+                            return item.uid;
+                        }
+                        return null;
+                    }).filter(Boolean); // 过滤掉null值
+                } else if (typeof values.imageList === 'string') {
+                    // 如果是字符串，尝试解析
+                    try {
+                        const parsed = JSON.parse(values.imageList);
+                        if (Array.isArray(parsed)) {
+                            // 如果解析后是数组，提取uid
+                            values.imageList = parsed.map((item) => {
+                                if (item && typeof item === 'object' && item.uid) {
+                                    return item.uid;
+                                }
+                                return null;
+                            }).filter(Boolean);
+                        } else {
+                            // 否则设为空数组
+                            values.imageList = [];
+                        }
+                    } catch (e) {
+                        console.error('解析图片JSON字符串失败:', e);
+                        values.imageList = [];
+                    }
+                } else {
+                    // 其他情况设为空数组
+                    values.imageList = [];
+                }
+            } else {
+                // 如果没有imageList，设为空数组
+                values.imageList = [];
+            }
+            
             setModalProps({confirmLoading: true});
             if (unref(mainId)) {
                 values['goodsId'] = unref(mainId);

@@ -12,6 +12,7 @@ import JVxeSelectCell from './components/cells/JVxeSelectCell.vue';
 import JVxeRadioCell from './components/cells/JVxeRadioCell.vue';
 import JVxeCheckboxCell from './components/cells/JVxeCheckboxCell.vue';
 import JVxeUploadCell from './components/cells/JVxeUploadCell.vue';
+import JVxeImageUploadCell from './components/cells/JVxeImageUploadCell.vue';
 // import { TagsInputCell, TagsSpanCell } from './components/cells/JVxeTagsCell.vue'
 import JVxeProgressCell from './components/cells/JVxeProgressCell.vue';
 import JVxeTextareaCell from './components/cells/JVxeTextareaCell.vue';
@@ -89,6 +90,7 @@ export function definedComponent() {
 
   // addComponent(JVxeTypes.tags, TagsInputCell, TagsSpanCell)
   addComponent(JVxeTypes.progress, JVxeProgressCell);
+  addComponent(JVxeTypes.imageUpload, JVxeImageUploadCell);
 
   // addComponent(JVxeTypes.departSelect, JVxeDepartSelectCell)
   // addComponent(JVxeTypes.userSelect, JVxeUserSelectCell)

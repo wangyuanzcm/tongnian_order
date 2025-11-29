@@ -2,6 +2,8 @@ package org.jeecg.modules.system.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.constant.CommonConstant;
@@ -9,6 +11,9 @@ import org.jeecg.common.constant.SymbolConstant;
 import org.jeecg.common.util.CommonUtils;
 import org.jeecg.common.util.filter.SsrfFileTypeFilter;
 import org.jeecg.common.util.oConvertUtils;
+import org.jeecg.goods.entity.TnImage;
+import org.jeecg.goods.service.ITnImageService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.FileCopyUtils;
@@ -44,6 +49,9 @@ public class CommonController {
      */
     @Value(value="${jeecg.uploadType}")
     private String uploadType;
+    
+    @Autowired
+    private ITnImageService tnImageService;
 
     /**
      * @Author 政辉
@@ -62,7 +70,7 @@ public class CommonController {
      */
     @PostMapping(value = "/upload")
     public Result<?> upload(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        Result<?> result = new Result<>();
+        Map<String, Object> imageData = new HashMap<>();
         String savePath = "";
         String bizPath = request.getParameter("biz");
         MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
@@ -80,13 +88,42 @@ public class CommonController {
             savePath = CommonUtils.upload(file, bizPath, uploadType);
         }
         if(oConvertUtils.isNotEmpty(savePath)){
-            result.setMessage(savePath);
-            result.setSuccess(true);
-        }else {
-            result.setMessage("上传失败！");
-            result.setSuccess(false);
+            try {
+                // 保存图片信息到tn_image表（如果tnImageService可用）
+                if (tnImageService != null && file != null && !file.isEmpty()) {
+                    String fileName = file.getOriginalFilename();
+                    // 保存图片信息到tn_image表
+                    TnImage tnImage = new TnImage();
+                    tnImage.setName(fileName);
+                    tnImage.setUrl(savePath);
+                    tnImage.setStatus("1"); // 设置状态为已上传
+                    tnImageService.save(tnImage);
+                    
+                    // 返回包含success、message、uid、name、url和status的图片数据，符合前端JImageUpload组件要求
+                    imageData.put("success", true);
+                    imageData.put("message", "上传成功");
+                    imageData.put("uid", tnImage.getId());
+                    imageData.put("name", fileName);
+                    imageData.put("url", savePath);
+                    imageData.put("status", "done");
+                } else {
+                    // 兼容原有逻辑，只返回URL
+                    imageData.put("success", true);
+                    imageData.put("message", savePath);
+                }
+                return Result.OK(imageData);
+            } catch (Exception e) {
+                log.error("保存图片信息失败：", e);
+                // 即使保存图片信息失败，只要文件上传成功，也返回成功结果
+                imageData.put("success", true);
+                imageData.put("message", savePath);
+                return Result.OK(imageData);
+            }
+        } else {
+            imageData.put("success", false);
+            imageData.put("message", "上传失败！");
+            return Result.error("上传失败！");
         }
-        return result;
     }
 
     /**

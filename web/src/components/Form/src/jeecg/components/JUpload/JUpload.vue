@@ -294,7 +294,8 @@
       if (info.file.response.success) {
         successFileList = fileListTemp.map((file) => {
           if (file.response) {
-            let reUrl = file.response.message;
+            // 适配新的接口返回格式，图片数据在response.result中
+            let reUrl = file.response.result.url;
             file.url = getFileAccessHttpUrl(reUrl);
           }
           return file;
@@ -324,7 +325,8 @@
           if (item.status === 'done') {
             let fileJson = {
               fileName: item.name,
-              filePath: item.response.message,
+              // 适配新的接口返回格式，图片数据在response.result中
+              filePath: item.response.result.url,
               fileSize: item.size,
             };
             newFileList.push(fileJson);
@@ -348,7 +350,8 @@
     let pathList: string[] = [];
     for (const item of uploadFiles) {
       if (item.status === 'done') {
-        pathList.push(item.response.message);
+        // 适配新的接口返回格式，图片数据在response.result中
+        pathList.push(item.response.result.url);
       } else {
         return;
       }

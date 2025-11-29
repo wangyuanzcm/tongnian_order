@@ -84,7 +84,7 @@
       const tenantId = getTenantId() ? getTenantId() : '0';
       function formatResult(files, responseText): string {
         let data: any = JSON.parse(responseText);
-        // {"success":true,"message":"markdown/aa_1653391146501.png","code":0,"result":null,"timestamp":1653391146501}'
+        // 适配新的接口返回格式：{"success":true,"message":"操作成功","code":0,"result":{"url":"markdown/aa_1653391146501.png"},"timestamp":1653391146501}'
         let filename = files[0].name as string;
         let result = {
           msg: '',
@@ -97,7 +97,7 @@
         if (data.success) {
           result.data.errFiles = [];
           result.data.succMap = {
-            [data.message]: getFileAccessHttpUrl(data.message),
+            [data.result.url]: getFileAccessHttpUrl(data.result.url),
           };
         } else {
           result.code = 1;
@@ -185,9 +185,9 @@
             // 遍历文件上传并展示
             async handler(files) {
               const uploadSuccess = (res) => {
-                // {"success":true,"message":"markdown/aa_1653391146501.png","code":0,"result":null,"timestamp":1653391146501}'
+                // 适配新的接口返回格式：{"success":true,"message":"操作成功","code":0,"result":{"url":"markdown/aa_1653391146501.png"},"timestamp":1653391146501}'
                 if (res.success) {
-                  vditorRef.value?.insertValue(`![${res.message}](${getFileAccessHttpUrl(res.message)})`);
+                  vditorRef.value?.insertValue(`![${res.result.url}](${getFileAccessHttpUrl(res.result.url)})`);
                 }
               };
               for (const file of files) {

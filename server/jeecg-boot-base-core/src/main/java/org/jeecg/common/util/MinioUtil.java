@@ -98,7 +98,12 @@ public class MinioUtil {
                     .stream(stream,stream.available(),-1).build();
             minioClient.putObject(objectArgs);
             stream.close();
-            fileUrl = minioUrl+newBucket+"/"+objectName;
+            // 确保URL格式正确：minioUrl/bucketName/objectName
+            if(minioUrl.endsWith("/")){
+                fileUrl = minioUrl+newBucket+"/"+objectName;
+            }else{
+                fileUrl = minioUrl+"/"+newBucket+"/"+objectName;
+            }
         }catch (Exception e){
             log.error(e.getMessage(), e);
         }
@@ -216,7 +221,12 @@ public class MinioUtil {
                 .stream(stream,stream.available(),-1).build();
         minioClient.putObject(objectArgs);
         stream.close();
-        return minioUrl+bucketName+"/"+relativePath;
+        // 确保URL格式正确：minioUrl/bucketName/objectName
+        if(minioUrl.endsWith("/")){
+            return minioUrl+bucketName+"/"+relativePath;
+        }else{
+            return minioUrl+"/"+bucketName+"/"+relativePath;
+        }
     }
 
 }

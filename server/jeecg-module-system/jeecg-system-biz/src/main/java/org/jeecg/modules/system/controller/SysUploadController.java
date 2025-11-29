@@ -33,8 +33,7 @@ public class SysUploadController {
      * @param request
      */
     @PostMapping(value = "/uploadMinio")
-    public Result<?> uploadMinio(HttpServletRequest request) throws Exception {
-        Result<?> result = new Result<>();
+    public Result<String> uploadMinio(HttpServletRequest request) throws Exception {
         // 获取业务路径
         String bizPath = request.getParameter("biz");
         // 获取上传文件对象
@@ -59,8 +58,8 @@ public class SysUploadController {
         minioFile.setFileName(orgName);
         minioFile.setUrl(fileUrl);
         ossFileService.save(minioFile);
-        result.setMessage(fileUrl);
-        result.setSuccess(true);
-        return result;
+        
+        // 返回文件URL
+        return Result.ok(fileUrl);
     }
 }

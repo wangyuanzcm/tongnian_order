@@ -25,8 +25,57 @@
        <template #action="{ record }">
          <TableAction :actions="getTableAction(record)"/>
        </template>
-       <!--字段回显插槽-->
+       <!--字段回显插槽-->       
        <template v-slot:bodyCell="{ column, record, index, text }">
+       </template>
+       <!-- 图片列表插槽 -->
+       <template #imageList="{ record }">
+         <div v-if="record.imageList && Array.isArray(record.imageList) && record.imageList.length > 0">
+           <div class="image-preview-list">
+             <div v-for="(item, index) in record.imageList" :key="item.id || index" class="image-preview-item">
+               <a-image
+                 :width="80"
+                 :src="item.url"
+                 :preview="{ visible: false }"
+                 @click="previewImage(item.url)"
+               >
+                 <template #placeholder>
+                   <div class="image-placeholder">
+                     <LoadingOutlined />
+                   </div>
+                 </template>
+               </a-image>
+             </div>
+           </div>
+         </div>
+         <div v-else-if="record.imageUrlString && typeof record.imageUrlString === 'string' && record.imageUrlString.trim() !== ''">
+           <div class="image-preview-list">
+             <div v-for="(url, index) in record.imageUrlString.split(',')" :key="index" class="image-preview-item">
+               <a-image
+                 :width="80"
+                 :src="url"
+                 :preview="{ visible: false }"
+                 @click="previewImage(url)"
+               >
+                 <template #placeholder>
+                   <div class="image-placeholder">
+                     <LoadingOutlined />
+                   </div>
+                 </template>
+               </a-image>
+             </div>
+           </div>
+         </div>
+         <span v-else>--</span>
+         <!-- 图片预览弹窗 -->
+         <a-modal
+           :visible="previewVisible"
+           :footer="null"
+           @cancel="previewVisible = false"
+           width="80%"
+         >
+           <img :src="previewImageUrl" style="width: 100%" alt="预览图片" />
+         </a-modal>
        </template>
      </BasicTable>
 
@@ -41,10 +90,14 @@
   import {useModal} from '/@/components/Modal';
   import TnGoodsSpecModal from './components/TnGoodsSpecModal.vue'
   import {tnGoodsSpecColumns} from './TnGoods.data';
+  import JImageUpload from '/@/components/Form/src/jeecg/components/JImageUpload.vue';
   import {tnGoodsSpecList, tnGoodsSpecDelete, tnGoodsSpecDeleteBatch, tnGoodsSpecExportXlsUrl, tnGoodsSpecImportUrl } from './TnGoods.api';
   import {isEmpty} from "/@/utils/is";
   import {useMessage} from '/@/hooks/web/useMessage';
   import {downloadFile} from '/@/utils/common/renderUtils';
+  import { Image as AImage } from 'ant-design-vue';
+  import { Modal as AModal } from 'ant-design-vue';
+  import { LoadingOutlined } from '@ant-design/icons-vue';
 
     //接收主表id
     const mainId = inject('mainId') || '';
@@ -53,6 +106,16 @@
     //弹窗model
     const [registerModal, {openModal}] = useModal();
     const searchInfo = {};
+    
+    // 图片预览相关
+    const previewVisible = ref(false);
+    const previewImageUrl = ref('');
+    
+    // 预览图片方法
+    function previewImage(url) {
+      previewImageUrl.value = url;
+      previewVisible.value = true;
+    }
     // 列表页面公共参数、方法
     const {prefixCls, tableContext, onImportXls, onExportXls} = useListPage({
         tableProps: {
@@ -68,6 +131,18 @@
                 current: 1,
                 pageSize: 5,
                 pageSizeOptions: ['5', '10', '20'],
+            },
+            // 添加排序配置，按照创建时间和更新时间倒序排列
+            sorter: {
+                defaultSortOrder: 'desc',
+                field: 'createTime', // 主要排序字段
+            },
+            // 在API参数中添加排序信息
+            beforeFetch: (params) => {
+                // 确保排序参数被正确添加到API请求中
+                params.orderByColumn = 'create_time'; // 后端字段名通常使用下划线格式
+                params.isAsc = 'desc'; // 倒序排列
+                return params;
             }
         },
         exportConfig: {
@@ -158,3 +233,24 @@
         ]
     }
 </script>
+
+<style scoped>
+  .image-preview-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .image-preview-item {
+    cursor: pointer;
+  }
+  
+  .image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 80px;
+    background-color: #f5f5f5;
+    color: #999;
+  }
+</style>

@@ -14,5 +14,6 @@
 		FROM  tn_goods_spec
 		WHERE
 			 goods_id = #{mainId} 
+		ORDER BY create_time DESC, update_time DESC
 	</select>
 </mapper>
